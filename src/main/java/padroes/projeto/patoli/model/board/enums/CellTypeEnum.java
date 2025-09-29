@@ -1,6 +1,6 @@
 package padroes.projeto.patoli.model.board.enums;
 
-public enum CellType {
+public enum CellTypeEnum {
     NORMAL,
     TRIANGLE_PENALTY,
     ENDPOINT,

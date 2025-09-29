@@ -1,6 +1,6 @@
 package padroes.projeto.patoli.model.board.layout;
 
-import padroes.projeto.patoli.model.board.enums.PlayerColor;
+import padroes.projeto.patoli.model.board.enums.PlayerColorEnum;
 
 import java.util.List;
 
@@ -12,5 +12,5 @@ public interface BoardLayout {
     // Coordenadas (row, col) das extremidades (ENDPOINT)
     List<int[]> getEndpointCoords();
     // Coordenada START por cor
-    int[] getStartForColor(PlayerColor color);
+    int[] getStartForColor(PlayerColorEnum color);
 }

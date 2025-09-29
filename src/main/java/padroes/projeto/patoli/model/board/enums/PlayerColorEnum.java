@@ -1,5 +1,5 @@
 package padroes.projeto.patoli.model.board.enums;
 
-public enum PlayerColor {
+public enum PlayerColorEnum {
     BLACK, WHITE
 }

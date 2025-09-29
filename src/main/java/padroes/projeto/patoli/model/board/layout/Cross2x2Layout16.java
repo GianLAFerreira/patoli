@@ -1,6 +1,6 @@
 package padroes.projeto.patoli.model.board.layout;
 
-import padroes.projeto.patoli.model.board.enums.PlayerColor;
+import padroes.projeto.patoli.model.board.enums.PlayerColorEnum;
 
 import java.util.*;
 
@@ -58,8 +58,8 @@ public class Cross2x2Layout16 implements BoardLayout {
     }
 
     @Override
-    public int[] getStartForColor(PlayerColor color) {
-        if (color == PlayerColor.BLACK) return new int[]{7, 8};
+    public int[] getStartForColor(PlayerColorEnum color) {
+        if (color == PlayerColorEnum.BLACK) return new int[]{7, 8};
         return new int[]{8, 7}; // WHITE
     }
 

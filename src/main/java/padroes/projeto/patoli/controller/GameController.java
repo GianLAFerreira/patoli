@@ -2,17 +2,15 @@ package padroes.projeto.patoli.controller;
 
 import padroes.projeto.patoli.model.board.Board;
 import padroes.projeto.patoli.model.board.Cell;
-import padroes.projeto.patoli.model.board.enums.CellType;
+import padroes.projeto.patoli.model.board.enums.CellTypeEnum;
 import padroes.projeto.patoli.model.game.Game;
 import padroes.projeto.patoli.model.game.GameObserver;
 import padroes.projeto.patoli.model.board.Piece;
 import padroes.projeto.patoli.model.board.Player;
-import padroes.projeto.patoli.model.board.enums.PlayerColor;
+import padroes.projeto.patoli.model.board.enums.PlayerColorEnum;
 import padroes.projeto.patoli.view.frame.GameView;
-import padroes.projeto.patoli.controller.viewmodel.CellTypeVM;
 import padroes.projeto.patoli.controller.viewmodel.CellVM;
 import padroes.projeto.patoli.controller.viewmodel.PieceVM;
-import padroes.projeto.patoli.controller.viewmodel.PlayerColorVM;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -118,24 +116,24 @@ public class GameController implements GameObserver {
     public boolean canEnterNewPiece() { return game.canEnterNewPiece(); }
     public boolean isGameOver() { return game.isGameOver(); }
 
-    public String getPlayerName(PlayerColorVM color) {
-        return (color == PlayerColorVM.BLACK ? game.getBlack() : game.getWhite()).getName();
+    public String getPlayerName(padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum color) {
+        return (color == padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum.BLACK ? game.getBlack() : game.getWhite()).getName();
     }
 
-    public int getPlayerCoins(PlayerColorVM color) {
-        return (color == PlayerColorVM.BLACK ? game.getBlack() : game.getWhite()).getCoins();
+    public int getPlayerCoins(padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum color) {
+        return (color == padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum.BLACK ? game.getBlack() : game.getWhite()).getCoins();
     }
 
-    public PlayerColorVM getCurrentPlayerColor() {
+    public padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum getCurrentPlayerColor() {
         return map(game.getCurrent().getColor());
     }
 
-    public PlayerColorVM getOpponentPlayerColor() {
+    public padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum getOpponentPlayerColor() {
         return map(game.getOpponent().getColor());
     }
 
-    public long getFinishedCount(PlayerColorVM color) {
-        return (color == PlayerColorVM.BLACK ? game.getBlack() : game.getWhite()).countFinished();
+    public long getFinishedCount(padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum color) {
+        return (color == padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum.BLACK ? game.getBlack() : game.getWhite()).countFinished();
     }
 
     public List<CellVM> getCells() {
@@ -144,15 +142,15 @@ public class GameController implements GameObserver {
         for (Cell c : b.getTrack()) {
             Piece occ = c.getOccupant();
             boolean occupied = (occ != null);
-            PlayerColorVM occColor = occupied ? map(occ.getOwner().getColor()) : null;
+            padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum occColor = occupied ? map(occ.getOwner().getColor()) : null;
             Integer occId = occupied ? occ.getId() : null;
             out.add(new CellVM(c.getRow(), c.getCol(), map(c.getType()), occupied, occColor, occId));
         }
         return out;
     }
 
-    public List<PieceVM> getPieces(PlayerColorVM color) {
-        Player p = (color == PlayerColorVM.BLACK) ? game.getBlack() : game.getWhite();
+    public List<PieceVM> getPieces(padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum color) {
+        Player p = (color == padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum.BLACK) ? game.getBlack() : game.getWhite();
         Board b = game.getBoard();
         List<PieceVM> list = new ArrayList<>();
         for (Piece pc : p.getPieces()) {
@@ -168,30 +166,30 @@ public class GameController implements GameObserver {
         return list;
     }
 
-    public List<PieceVM> getReservedPieces(PlayerColorVM color) {
+    public List<PieceVM> getReservedPieces(padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum color) {
         List<PieceVM> all = getPieces(color);
         List<PieceVM> out = new ArrayList<>();
         for (PieceVM vm : all) if (!vm.onBoard && !vm.finished) out.add(vm);
         return out;
     }
 
-    public List<PieceVM> getFinishedPieces(PlayerColorVM color) {
+    public List<PieceVM> getFinishedPieces(padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum color) {
         List<PieceVM> all = getPieces(color);
         List<PieceVM> out = new ArrayList<>();
         for (PieceVM vm : all) if (vm.finished) out.add(vm);
         return out;
     }
 
-    private PlayerColorVM map(PlayerColor c) {
-        return c == PlayerColor.BLACK ? PlayerColorVM.BLACK : PlayerColorVM.WHITE;
+    private padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum map(PlayerColorEnum c) {
+        return c == PlayerColorEnum.BLACK ? padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum.BLACK : padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum.WHITE;
     }
 
-    private CellTypeVM map(CellType t) {
+    private padroes.projeto.patoli.controller.viewmodel.enums.CellTypeEnum map(CellTypeEnum t) {
         return switch (t) {
-            case NORMAL -> CellTypeVM.NORMAL;
-            case TRIANGLE_PENALTY -> CellTypeVM.TRIANGLE_PENALTY;
-            case ENDPOINT -> CellTypeVM.ENDPOINT;
-            case START -> CellTypeVM.START;
+            case NORMAL -> padroes.projeto.patoli.controller.viewmodel.enums.CellTypeEnum.NORMAL;
+            case TRIANGLE_PENALTY -> padroes.projeto.patoli.controller.viewmodel.enums.CellTypeEnum.TRIANGLE_PENALTY;
+            case ENDPOINT -> padroes.projeto.patoli.controller.viewmodel.enums.CellTypeEnum.ENDPOINT;
+            case START -> padroes.projeto.patoli.controller.viewmodel.enums.CellTypeEnum.START;
         };
     }
 }

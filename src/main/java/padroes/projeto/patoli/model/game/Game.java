@@ -3,7 +3,7 @@ package padroes.projeto.patoli.model.game;
 import padroes.projeto.patoli.model.board.Board;
 import padroes.projeto.patoli.model.board.Piece;
 import padroes.projeto.patoli.model.board.Player;
-import padroes.projeto.patoli.model.board.enums.PlayerColor;
+import padroes.projeto.patoli.model.board.enums.PlayerColorEnum;
 import padroes.projeto.patoli.model.game.rules.MovementRules;
 import padroes.projeto.patoli.model.game.rules.ScoringRules;
 
@@ -44,8 +44,8 @@ public class Game implements GameObservable {
     }
 
     public Game(String blackName, String whiteName) {
-        this.black = new Player(blackName, PlayerColor.BLACK);
-        this.white = new Player(whiteName, PlayerColor.WHITE);
+        this.black = new Player(blackName, PlayerColorEnum.BLACK);
+        this.white = new Player(whiteName, PlayerColorEnum.WHITE);
         int r1 = dice.roll();
         int r2 = dice.roll();
         current = r1 >= r2 ? black : white;

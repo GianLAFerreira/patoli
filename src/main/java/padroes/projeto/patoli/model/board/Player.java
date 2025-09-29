@@ -1,17 +1,17 @@
 package padroes.projeto.patoli.model.board;
 
-import padroes.projeto.patoli.model.board.enums.PlayerColor;
+import padroes.projeto.patoli.model.board.enums.PlayerColorEnum;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Player {
     private final String name;
-    private final PlayerColor color;
+    private final PlayerColorEnum color;
     private int coins = 20;
     private final List<Piece> pieces = new ArrayList<>();
 
-    public Player(String name, PlayerColor color) {
+    public Player(String name, PlayerColorEnum color) {
         this.name = name;
         this.color = color;
         for (int i = 0; i < 6; i++) {
@@ -20,7 +20,7 @@ public class Player {
     }
 
     public String getName() { return name; }
-    public PlayerColor getColor() { return color; }
+    public PlayerColorEnum getColor() { return color; }
     public int getCoins() { return coins; }
     public void addCoins(int delta) { coins += delta; }
     public boolean hasCoins() { return coins > 0; }

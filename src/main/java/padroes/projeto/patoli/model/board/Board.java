@@ -1,7 +1,7 @@
 package padroes.projeto.patoli.model.board;
 
-import padroes.projeto.patoli.model.board.enums.CellType;
-import padroes.projeto.patoli.model.board.enums.PlayerColor;
+import padroes.projeto.patoli.model.board.enums.CellTypeEnum;
+import padroes.projeto.patoli.model.board.enums.PlayerColorEnum;
 import padroes.projeto.patoli.model.board.layout.BoardLayout;
 import padroes.projeto.patoli.model.board.layout.Cross2x2Layout16;
 
@@ -16,7 +16,7 @@ import java.util.Set;
 public class Board {
     // Tabuleiro com layout configurável
     private final List<Cell> track = new ArrayList<>();
-    private final Map<PlayerColor, Integer> startIndex = new EnumMap<>(PlayerColor.class);
+    private final Map<PlayerColorEnum, Integer> startIndex = new EnumMap<>(PlayerColorEnum.class);
     private final Set<Integer> endpoints = new HashSet<>();
     private final Set<Integer> trianglePenalty = new HashSet<>();
 
@@ -37,7 +37,7 @@ public class Board {
         for (int i = 0; i < coords.size(); i++) {
             int r = coords.get(i)[0];
             int c = coords.get(i)[1];
-            track.add(new Cell(i, r, c, CellType.NORMAL));
+            track.add(new Cell(i, r, c, CellTypeEnum.NORMAL));
         }
 
         // ENDPOINTs via layout
@@ -45,7 +45,7 @@ public class Board {
             int idx = indexOfCoord(coords, ep[0], ep[1]);
             if (idx >= 0) {
                 endpoints.add(idx);
-                setCellType(idx, CellType.ENDPOINT);
+                setCellType(idx, CellTypeEnum.ENDPOINT);
             }
         }
 
@@ -60,26 +60,26 @@ public class Board {
         }
         for (int idx : trianglePenalty) {
             if (!endpoints.contains(idx)) {
-                setCellType(idx, CellType.TRIANGLE_PENALTY);
+                setCellType(idx, CellTypeEnum.TRIANGLE_PENALTY);
             }
         }
 
         // STARTs por cor via layout
-        for (PlayerColor color : PlayerColor.values()) {
+        for (PlayerColorEnum color : PlayerColorEnum.values()) {
             int[] st = layout.getStartForColor(color);
             int idx = indexOfCoord(coords, st[0], st[1]);
             if (idx >= 0) {
-                setCellType(idx, CellType.START);
+                setCellType(idx, CellTypeEnum.START);
                 startIndex.put(color, idx);
             }
         }
         // fallback
-        for (PlayerColor color : PlayerColor.values()) {
+        for (PlayerColorEnum color : PlayerColorEnum.values()) {
             startIndex.putIfAbsent(color, 0);
         }
     }
 
-    private void setCellType(int index, CellType type) {
+    private void setCellType(int index, CellTypeEnum type) {
         Cell old = track.get(index);
         Cell cell = new Cell(old.getIndex(), old.getRow(), old.getCol(), type);
         cell.setOccupant(old.getOccupant());
@@ -95,7 +95,7 @@ public class Board {
     public int getRows() { return rows; }
     public int getCols() { return cols; }
 
-    public int getStartIndex(PlayerColor color) {
+    public int getStartIndex(PlayerColorEnum color) {
         return startIndex.get(color);
     }
 
