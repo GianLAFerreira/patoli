@@ -1,7 +1,7 @@
 package padroes.projeto.patoli.view.frame;
 
 import padroes.projeto.patoli.controller.GameController;
-import padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum;
+import padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorVMEnum;
 import padroes.projeto.patoli.view.panel.ActionBarPanel;
 import padroes.projeto.patoli.view.panel.BannerBarPanel;
 import padroes.projeto.patoli.view.panel.BoardPanel;
@@ -45,11 +45,11 @@ public class MainFrame extends JFrame implements GameView {
         GridBagConstraints gl = new GridBagConstraints();
         gl.gridx = 0; gl.weightx = 1; gl.fill = GridBagConstraints.HORIZONTAL; gl.insets = new Insets(6, 6, 6, 6);
 
-        blackInfoPanel = new PlayerInfoPanel(controller, PlayerColorEnum.BLACK);
+        blackInfoPanel = new PlayerInfoPanel(controller, PlayerColorVMEnum.BLACK);
         gl.gridy = 0;
         leftPanel.add(blackInfoPanel, gl);
 
-        whiteInfoPanel = new PlayerInfoPanel(controller, PlayerColorEnum.WHITE);
+        whiteInfoPanel = new PlayerInfoPanel(controller, PlayerColorVMEnum.WHITE);
         gl.gridy = 1;
         leftPanel.add(whiteInfoPanel, gl);
 
@@ -91,7 +91,7 @@ public class MainFrame extends JFrame implements GameView {
             case "PENALTY" -> banner.showBanner("Penalidade: -1 moeda", warn, Color.BLACK, 1600);
             case "BONUS" -> banner.showBanner("Bônus: jogada extra!", bonus, Color.BLACK, 1600);
             case "TURN" -> {
-                PlayerColorEnum c = controller.getCurrentPlayerColor();
+                PlayerColorVMEnum c = controller.getCurrentPlayerColor();
                 String name = controller.getPlayerName(c);
                 banner.showBanner("Vez: " + name + " (" + c + ")", info, new Color(235, 235, 235), 1200);
             }

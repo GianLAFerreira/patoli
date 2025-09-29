@@ -2,7 +2,7 @@ package padroes.projeto.patoli.view.panel;
 
 import padroes.projeto.patoli.controller.GameController;
 import padroes.projeto.patoli.controller.viewmodel.PieceVM;
-import padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum;
+import padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorVMEnum;
 
 import javax.swing.*;
 import java.awt.*;
@@ -10,9 +10,9 @@ import java.util.List;
 
 public class PlayerInfoPanel extends JPanel {
     private final GameController controller;
-    private final PlayerColorEnum color;
+    private final PlayerColorVMEnum color;
 
-    public PlayerInfoPanel(GameController controller, PlayerColorEnum color) {
+    public PlayerInfoPanel(GameController controller, PlayerColorVMEnum color) {
         this.controller = controller;
         this.color = color;
         setPreferredSize(new Dimension(240, 260));
@@ -130,7 +130,7 @@ public class PlayerInfoPanel extends JPanel {
         g2.fillOval(x + r / 6, y + r / 6, d, d);
     }
 
-    private int drawMiniPieces(Graphics2D g2, int x, int startY, List<PieceVM> pieces, PlayerColorEnum color) {
+    private int drawMiniPieces(Graphics2D g2, int x, int startY, List<PieceVM> pieces, PlayerColorVMEnum color) {
         int cx = x, cy = startY;
         int size = 22, gap = 6;
 
@@ -145,14 +145,14 @@ public class PlayerInfoPanel extends JPanel {
         return cy + size + gap;
     }
 
-    private void drawMiniPieceToken(Graphics2D g2, int x, int y, int size, PlayerColorEnum color, int id) {
+    private void drawMiniPieceToken(Graphics2D g2, int x, int y, int size, PlayerColorVMEnum color, int id) {
         int r = size / 2;
         int cx = x + r, cy = y + r;
 
         g2.setColor(new Color(0, 0, 0, 80));
         g2.fillOval(cx - r + 2, cy - r + 2, 2 * r, 2 * r);
 
-        boolean isBlack = (color == PlayerColorEnum.BLACK);
+        boolean isBlack = (color == PlayerColorVMEnum.BLACK);
         RadialGradientPaint bodyPaint = new RadialGradientPaint(
                 new Point(cx - r / 3, cy - r / 3), r,
                 new float[]{0f, 0.65f, 1f},

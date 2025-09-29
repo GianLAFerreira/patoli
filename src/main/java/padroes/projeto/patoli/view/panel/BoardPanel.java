@@ -2,8 +2,8 @@ package padroes.projeto.patoli.view.panel;
 
 import padroes.projeto.patoli.controller.GameController;
 import padroes.projeto.patoli.controller.viewmodel.CellVM;
-import padroes.projeto.patoli.controller.viewmodel.enums.CellTypeEnum;
-import padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorEnum;
+import padroes.projeto.patoli.controller.viewmodel.enums.CellTypeVMEnum;
+import padroes.projeto.patoli.controller.viewmodel.enums.PlayerColorVMEnum;
 
 import javax.swing.*;
 import java.awt.*;
@@ -164,9 +164,9 @@ public class BoardPanel extends JPanel {
         int y = margin + cell.row * cellSize;
 
         Color base = new Color(72, 78, 88);
-        if (cell.type == CellTypeEnum.START) base = new Color(40, 130, 70);
-        if (cell.type == CellTypeEnum.ENDPOINT) base = new Color(170, 55, 55);
-        if (cell.type == CellTypeEnum.TRIANGLE_PENALTY) base = new Color(180, 145, 50);
+        if (cell.type == CellTypeVMEnum.START) base = new Color(40, 130, 70);
+        if (cell.type == CellTypeVMEnum.ENDPOINT) base = new Color(170, 55, 55);
+        if (cell.type == CellTypeVMEnum.TRIANGLE_PENALTY) base = new Color(180, 145, 50);
 
         int arc = Math.max(10, cellSize / 4);
         Shape rect = new RoundRectangle2D.Float(x + 3, y + 3, cellSize - 6, cellSize - 6, arc, arc);
@@ -195,7 +195,7 @@ public class BoardPanel extends JPanel {
         }
         g2.setClip(null);
 
-        if (cell.type == CellTypeEnum.TRIANGLE_PENALTY) {
+        if (cell.type == CellTypeVMEnum.TRIANGLE_PENALTY) {
             int padding = Math.max(6, cellSize / 6);
             int cx = x + cellSize / 2;
             int topY = y + padding + 4;
@@ -212,7 +212,7 @@ public class BoardPanel extends JPanel {
             g2.drawPolygon(px, py, 3);
         }
 
-        if (cell.type == CellTypeEnum.ENDPOINT) {
+        if (cell.type == CellTypeVMEnum.ENDPOINT) {
             int cx = x + cellSize / 2;
             int cy = y + cellSize / 2;
             int outer = Math.max(6, (cellSize - 14) / 2);
@@ -242,7 +242,7 @@ public class BoardPanel extends JPanel {
         int cy = margin + cell.row * cellSize + cellSize / 2;
 
         int r = cellSize / 2 - 6;
-        boolean isBlack = (cell.occupantColor == PlayerColorEnum.BLACK);
+        boolean isBlack = (cell.occupantColor == PlayerColorVMEnum.BLACK);
 
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 

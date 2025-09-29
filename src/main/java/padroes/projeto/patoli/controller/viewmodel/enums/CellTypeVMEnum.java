@@ -1,6 +1,6 @@
 package padroes.projeto.patoli.controller.viewmodel.enums;
 
-public enum CellTypeEnum {
+public enum CellTypeVMEnum {
     NORMAL,
     TRIANGLE_PENALTY,
     ENDPOINT,
