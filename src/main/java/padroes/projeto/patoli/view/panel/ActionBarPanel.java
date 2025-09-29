@@ -1,15 +1,12 @@
-package padroes.projeto.patoli.view;
+package padroes.projeto.patoli.view.panel;
 
 import padroes.projeto.patoli.controller.GameController;
-import padroes.projeto.patoli.model.Game;
-import padroes.projeto.patoli.model.Player;
 
 import javax.swing.*;
 import java.awt.*;
 
 public class ActionBarPanel extends JPanel {
     private final GameController controller;
-    private final Game game;
 
     private final JButton rollButton;
     private final JButton enterButton;
@@ -17,9 +14,8 @@ public class ActionBarPanel extends JPanel {
     private final JLabel turnLabel;
     private final JLabel rollLabel;
 
-    public ActionBarPanel(GameController controller, Game game) {
+    public ActionBarPanel(GameController controller) {
         this.controller = controller;
-        this.game = game;
 
         setOpaque(false);
         setPreferredSize(new Dimension(300, 0)); // largura fixa agradável na direita
@@ -77,6 +73,22 @@ public class ActionBarPanel extends JPanel {
         add(card, gc);
     }
 
+    public void refresh() {
+        String turnText = "Vez: " + controller.getPlayerName(controller.getCurrentPlayerColor())
+                + " (" + controller.getCurrentPlayerColor() + ")";
+        turnLabel.setText(turnText);
+
+        String rollText = "Rolagem: " + (controller.getLastRoll() >= 0 ? controller.getLastRoll() : "-");
+        rollLabel.setText(rollText);
+
+        boolean canRoll = controller.getLastRoll() == -1 && !controller.isGameOver();
+        rollButton.setEnabled(canRoll);
+        enterButton.setEnabled(controller.canEnterNewPiece() && !controller.isGameOver());
+        passButton.setEnabled(!controller.isGameOver());
+
+        repaint();
+    }
+
     private JButton createPrimaryButton(String text) {
         JButton b = new JButton(text);
         b.setFocusPainted(false);
@@ -115,23 +127,6 @@ public class ActionBarPanel extends JPanel {
                 BorderFactory.createEmptyBorder(10, 16, 10, 16)
         ));
         return b;
-    }
-
-    public void refresh() {
-        Player current = game.getCurrent();
-        Player opp = game.getOpponent();
-        String turnText = "Vez: " + current.getName() + " (" + current.getColor() + ")";
-        turnLabel.setText(turnText);
-
-        String rollText = "Rolagem: " + (game.getLastRoll() >= 0 ? game.getLastRoll() : "-");
-        rollLabel.setText(rollText);
-
-        boolean canRoll = game.getLastRoll() == -1 && !game.isGameOver();
-        rollButton.setEnabled(canRoll);
-        enterButton.setEnabled(game.canEnterNewPiece() && !game.isGameOver());
-        passButton.setEnabled(!game.isGameOver());
-
-        repaint();
     }
 
     @Override

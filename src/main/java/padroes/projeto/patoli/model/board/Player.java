@@ -1,4 +1,6 @@
-package padroes.projeto.patoli.model;
+package padroes.projeto.patoli.model.board;
+
+import padroes.projeto.patoli.model.board.enums.PlayerColor;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,4 +1,6 @@
-package padroes.projeto.patoli.model;
+package padroes.projeto.patoli.model.board;
+
+import padroes.projeto.patoli.model.board.enums.CellType;
 
 public class Cell {
     private final int index;

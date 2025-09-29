@@ -1,4 +1,4 @@
-package padroes.projeto.patoli.model;
+package padroes.projeto.patoli.model.board;
 
 public class Piece {
     public static final int OFF_BOARD = -1;

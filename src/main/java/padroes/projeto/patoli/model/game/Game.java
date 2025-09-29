@@ -1,10 +1,17 @@
-package padroes.projeto.patoli.model;
+package padroes.projeto.patoli.model.game;
+
+import padroes.projeto.patoli.model.board.Board;
+import padroes.projeto.patoli.model.board.Piece;
+import padroes.projeto.patoli.model.board.Player;
+import padroes.projeto.patoli.model.board.enums.PlayerColor;
+import padroes.projeto.patoli.model.game.rules.MovementRules;
+import padroes.projeto.patoli.model.game.rules.ScoringRules;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-public class Game {
+public class Game implements GameObservable {
     private final Board board = new Board();
     private final CoinDice dice = new CoinDice();
 
@@ -15,16 +22,36 @@ public class Game {
     private int lastRoll = -1;
     private boolean extraTurn = false;
 
+    // Regras extraídas
+    private final MovementRules movementRules = new MovementRules();
+    private final ScoringRules scoringRules = new ScoringRules();
+
+    // Observers
+    private final List<GameObserver> observers = new ArrayList<>();
+
+    @Override
+    public void addObserver(GameObserver observer) {
+        if (observer != null) observers.add(observer);
+    }
+
+    @Override
+    public void removeObserver(GameObserver observer) { observers.remove(observer); }
+
+    private void notifyObservers(String reason) {
+        for (GameObserver o : List.copyOf(observers)) {
+            o.onGameChanged(this, reason);
+        }
+    }
+
     public Game(String blackName, String whiteName) {
         this.black = new Player(blackName, PlayerColor.BLACK);
         this.white = new Player(whiteName, PlayerColor.WHITE);
-        // Decisão inicial simples: rolagem para decidir
         int r1 = dice.roll();
         int r2 = dice.roll();
         current = r1 >= r2 ? black : white;
         lastRoll = -1;
-        // Colocar 1 peça inicial de cada jogador nas casas START
         initializeStartingPieces();
+        notifyObservers("INIT");
     }
 
     public Board getBoard() { return board; }
@@ -38,6 +65,7 @@ public class Game {
         int val = dice.roll();
         lastRoll = val;
         extraTurn = false;
+        notifyObservers("ROLL");
         return val;
     }
 
@@ -56,6 +84,7 @@ public class Game {
         Piece p = opt.get();
         p.placeAtStart(start);
         board.occupy(start, p);
+        notifyObservers("ENTER_INIT");
     }
 
     public boolean canEnterNewPiece() {
@@ -70,50 +99,26 @@ public class Game {
         p.placeAtStart(start);
         board.occupy(start, p);
         applyLandingRules(p, start);
+        notifyObservers("ENTER");
         return true;
     }
 
     public List<Piece> movablePieces() {
         List<Piece> list = new ArrayList<>();
         if (lastRoll <= 0) return list;
-
         for (Piece p : current.getPieces()) {
             if (p.isFinished()) continue;
             if (!p.isOnBoard()) continue;
-
             int dest = computeDestination(p.getPosition(), lastRoll);
-            if (dest == Piece.FINISHED) {
-                list.add(p);
-                continue;
-            }
-            if (board.isFree(dest)) {
-                list.add(p);
-            }
+            if (dest == Piece.FINISHED || (dest >= 0 && board.isFree(dest))) list.add(p);
         }
         return list;
     }
 
-    // Movimento circular normal ao longo da trilha (permite cruzar o START, mas só finaliza se START estiver livre)
+    // Delegado para MovementRules
     private int computeDestination(int from, int steps) {
-        int n = board.size();
-        int startIdx = board.getStartIndex(current.getColor());
-
-        int dest = (from + steps) % n;
-
-        // Finaliza apenas se cair exatamente na START e ela estiver desocupada
-        if (dest == startIdx && steps > 0) {
-            // Se a casa START está ocupada (por qualquer peça), não pode finalizar (regra "sem captura")
-            if (board.isFree(startIdx)) {
-                return Piece.FINISHED;
-            } else {
-                return Integer.MIN_VALUE; // movimento inválido (não pode finalizar por START ocupada)
-            }
-        }
-
-        // Permitir cruzar o START sem bloquear o movimento
-        return board.advanceIndex(from, steps);
+        return movementRules.computeDestination(board, current, from, steps);
     }
-
 
     public boolean movePiece(Piece piece) {
         if (lastRoll < 0) return false;
@@ -129,6 +134,7 @@ public class Game {
             piece.finish();
             getOpponent().addCoins(-1);
             current.addCoins(1);
+            notifyObservers("FINISH");
             return true;
         }
 
@@ -137,30 +143,33 @@ public class Game {
         board.free(from);
         piece.moveTo(dest);
         board.occupy(dest, piece);
-
         applyLandingRules(piece, dest);
+        notifyObservers("MOVE");
         return true;
     }
 
+    // Delegado para ScoringRules (aplica resultado no estado do jogo)
     private void applyLandingRules(Piece piece, int index) {
-        // Triângulo: paga 1 moeda ao adversário
-        if (board.isTriangle(index)) {
-            current.addCoins(-1);
-            getOpponent().addCoins(1);
+        int penalty = scoringRules.penaltyForLanding(board, index);
+        if (penalty != 0) {
+            current.addCoins(penalty);
+            getOpponent().addCoins(-penalty);
+            notifyObservers("PENALTY");
         }
-        // Ponta: ganha turno extra
-        if (board.isEndpoint(index)) {
+        if (scoringRules.isExtraTurn(board, index)) {
             extraTurn = true;
+            notifyObservers("BONUS");
         }
     }
 
     public boolean mustPass() {
-        if (lastRoll <= 0) return true; // 0: não move
+        if (lastRoll <= 0) return true;
         return movablePieces().isEmpty() && !canEnterNewPiece();
     }
 
     public void nextTurnIfNeeded() {
         if (!current.hasCoins()) {
+            notifyObservers("NO_COINS");
             return;
         }
         if (!extraTurn) {
@@ -168,11 +177,11 @@ public class Game {
         }
         lastRoll = -1;
         extraTurn = false;
+        notifyObservers("TURN");
     }
 
     public boolean isGameOver() {
-        if (!black.hasCoins()) return true;
-        if (!white.hasCoins()) return true;
+        if (!black.hasCoins() || !white.hasCoins()) return true;
         if (black.allFinished() || white.allFinished()) return true;
         return false;
     }

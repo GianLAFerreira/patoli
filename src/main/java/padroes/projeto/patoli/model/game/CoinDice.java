@@ -1,4 +1,4 @@
-package padroes.projeto.patoli.model;
+package padroes.projeto.patoli.model.game;
 
 import java.util.Random;
 

@@ -1,20 +1,22 @@
-package padroes.projeto.patoli.view;
+package padroes.projeto.patoli.view.panel;
 
-import padroes.projeto.patoli.model.*;
+import padroes.projeto.patoli.controller.GameController;
+import padroes.projeto.patoli.controller.viewmodel.PieceVM;
+import padroes.projeto.patoli.controller.viewmodel.PlayerColorVM;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class PlayerInfoPanel extends JPanel {
-    private final Game game;
-    private final PlayerColor color;
+    private final GameController controller;
+    private final PlayerColorVM color;
 
-    public PlayerInfoPanel(Game game, PlayerColor color) {
-        this.game = game;
+    public PlayerInfoPanel(GameController controller, PlayerColorVM color) {
+        this.controller = controller;
         this.color = color;
         setPreferredSize(new Dimension(240, 260));
+
         setBackground(new Color(28, 28, 28));
         setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(60, 60, 60)),
@@ -29,79 +31,67 @@ public class PlayerInfoPanel extends JPanel {
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        Player p = (color == PlayerColor.BLACK) ? game.getBlack() : game.getWhite();
-        boolean isCurrent = (p == game.getCurrent());
+
+        boolean isCurrent = (controller.getCurrentPlayerColor() == color);
+        String title = controller.getPlayerName(color) + " (" + color + ")";
 
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Título
-        String title = p.getName() + " (" + p.getColor() + ")";
         g2.setFont(getFont().deriveFont(Font.BOLD, 16f));
         g2.setColor(isCurrent ? new Color(255, 215, 0) : new Color(210, 210, 210));
         g2.drawString(title, 8, 20);
 
         int y = 36;
-
-        // Linha separadora
         g2.setColor(new Color(70, 70, 70));
         g2.drawLine(8, y, getWidth() - 8, y);
         y += 12;
 
-        // Moedas
         g2.setFont(getFont().deriveFont(Font.PLAIN, 13f));
         g2.setColor(new Color(210, 210, 210));
-        g2.drawString("Moedas: " + p.getCoins(), 8, y);
+        g2.drawString("Moedas: " + controller.getPlayerCoins(color), 8, y);
         y += 10;
 
-        y = drawCoins(g2, 8, y + 6, p.getCoins());
+        y = drawCoins(g2, 8, y + 6, controller.getPlayerCoins(color));
 
         y += 8;
         g2.setColor(new Color(70, 70, 70));
         g2.drawLine(8, y, getWidth() - 8, y);
         y += 14;
 
-        // Peças reservadas (fora do tabuleiro)
-        List<Piece> offBoard = p.getPieces().stream().filter(pc -> !pc.isOnBoard() && !pc.isFinished()).collect(Collectors.toList());
+        List<PieceVM> reserved = controller.getReservedPieces(color);
         g2.setColor(new Color(210, 210, 210));
-        g2.drawString("Reservadas: " + offBoard.size(), 8, y);
+        g2.drawString("Reservadas: " + reserved.size(), 8, y);
         y += 8;
-        y = drawMiniPieces(g2, 8, y + 6, offBoard, p.getColor());
+        y = drawMiniPieces(g2, 8, y + 6, reserved, color);
 
         y += 8;
         g2.setColor(new Color(70, 70, 70));
         g2.drawLine(8, y, getWidth() - 8, y);
         y += 14;
 
-        // Peças finalizadas
-        List<Piece> finished = p.getPieces().stream().filter(Piece::isFinished).collect(Collectors.toList());
+        List<PieceVM> finished = controller.getFinishedPieces(color);
         g2.setColor(new Color(210, 210, 210));
         g2.drawString("Finalizadas: " + finished.size(), 8, y);
         y += 8;
-        drawMiniPieces(g2, 8, y + 6, finished, p.getColor());
+        drawMiniPieces(g2, 8, y + 6, finished, color);
 
         g2.dispose();
     }
 
     private int drawCoins(Graphics2D g2, int x, int startY, int coins) {
-        // Ajuste para caber 10 moedas por linha
-        int innerPadding = 16; // margem interna usada no cálculo de largura disponível
+        int innerPadding = 16;
         int available = Math.max(60, getWidth() - innerPadding);
-        int desiredPerRow = 10;
+        int perRow = 10;
         int gap = 4;
-
-        // Calcula o tamanho da moeda para caber exatamente 10 por linha
-        int size = (available - (desiredPerRow - 1) * gap) / desiredPerRow;
-        size = Math.max(14, Math.min(22, size)); // limites razoáveis
+        int size = (available - (perRow - 1) * gap) / perRow;
+        size = Math.max(14, Math.min(22, size));
 
         int cx = x;
         int cy = startY;
-        int perRow = desiredPerRow;
-
-        int shown = Math.min(coins, 40); // limite de renderização
+        int shown = Math.min(coins, 40);
         for (int i = 0; i < shown; i++) {
             drawCoinIcon(g2, cx, cy, size);
-            // próximo x
             cx += size + gap;
             if ((i + 1) % perRow == 0) {
                 cx = x;
@@ -118,10 +108,9 @@ public class PlayerInfoPanel extends JPanel {
 
     private void drawCoinIcon(Graphics2D g2, int x, int y, int size) {
         int r = size;
-        // sombra
         g2.setColor(new Color(0, 0, 0, 90));
         g2.fillOval(x + 2, y + 2, r, r);
-        // moeda
+
         RadialGradientPaint paint = new RadialGradientPaint(
                 new Point(x + r / 3, y + r / 3), r,
                 new float[]{0f, 0.7f, 1f},
@@ -131,24 +120,22 @@ public class PlayerInfoPanel extends JPanel {
         g2.setPaint(paint);
         g2.fillOval(x, y, r, r);
         g2.setPaint(old);
-        // aro
+
         g2.setColor(new Color(120, 90, 0));
         g2.setStroke(new BasicStroke(1.8f));
         g2.drawOval(x, y, r, r);
-        // detalhe
+
         g2.setColor(new Color(255, 255, 255, 110));
         int d = Math.max(4, r / 3);
         g2.fillOval(x + r / 6, y + r / 6, d, d);
     }
 
-    private int drawMiniPieces(Graphics2D g2, int x, int startY, List<Piece> pieces, PlayerColor color) {
-        int cx = x;
-        int cy = startY;
-        int size = 22;
-        int gap = 6;
+    private int drawMiniPieces(Graphics2D g2, int x, int startY, List<PieceVM> pieces, PlayerColorVM color) {
+        int cx = x, cy = startY;
+        int size = 22, gap = 6;
 
-        for (Piece pc : pieces) {
-            drawMiniPieceToken(g2, cx, cy, size, color, pc.getId());
+        for (PieceVM pc : pieces) {
+            drawMiniPieceToken(g2, cx, cy, size, color, pc.id);
             cx += size + gap;
             if ((cx + size) > getWidth()) {
                 cx = x;
@@ -158,17 +145,14 @@ public class PlayerInfoPanel extends JPanel {
         return cy + size + gap;
     }
 
-    private void drawMiniPieceToken(Graphics2D g2, int x, int y, int size, PlayerColor color, int id) {
+    private void drawMiniPieceToken(Graphics2D g2, int x, int y, int size, PlayerColorVM color, int id) {
         int r = size / 2;
-        int cx = x + r;
-        int cy = y + r;
+        int cx = x + r, cy = y + r;
 
-        // sombra
         g2.setColor(new Color(0, 0, 0, 80));
         g2.fillOval(cx - r + 2, cy - r + 2, 2 * r, 2 * r);
 
-        // corpo
-        boolean isBlack = (color == PlayerColor.BLACK);
+        boolean isBlack = (color == PlayerColorVM.BLACK);
         RadialGradientPaint bodyPaint = new RadialGradientPaint(
                 new Point(cx - r / 3, cy - r / 3), r,
                 new float[]{0f, 0.65f, 1f},
@@ -181,12 +165,10 @@ public class PlayerInfoPanel extends JPanel {
         g2.fillOval(cx - r, cy - r, 2 * r, 2 * r);
         g2.setPaint(old);
 
-        // aro
         g2.setColor(isBlack ? new Color(230, 230, 230) : new Color(25, 25, 25));
         g2.setStroke(new BasicStroke(1.8f));
         g2.drawOval(cx - r, cy - r, 2 * r, 2 * r);
 
-        // número
         String label = String.valueOf(id + 1);
         g2.setFont(getFont().deriveFont(Font.BOLD, 11f));
         FontMetrics fm = g2.getFontMetrics();

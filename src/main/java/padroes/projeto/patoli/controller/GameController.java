@@ -1,33 +1,57 @@
 package padroes.projeto.patoli.controller;
 
-import padroes.projeto.patoli.model.Game;
-import padroes.projeto.patoli.model.Piece;
-import padroes.projeto.patoli.view.MainFrame;
+import padroes.projeto.patoli.model.board.Board;
+import padroes.projeto.patoli.model.board.Cell;
+import padroes.projeto.patoli.model.board.enums.CellType;
+import padroes.projeto.patoli.model.game.Game;
+import padroes.projeto.patoli.model.game.GameObserver;
+import padroes.projeto.patoli.model.board.Piece;
+import padroes.projeto.patoli.model.board.Player;
+import padroes.projeto.patoli.model.board.enums.PlayerColor;
+import padroes.projeto.patoli.view.frame.GameView;
+import padroes.projeto.patoli.controller.viewmodel.CellTypeVM;
+import padroes.projeto.patoli.controller.viewmodel.CellVM;
+import padroes.projeto.patoli.controller.viewmodel.PieceVM;
+import padroes.projeto.patoli.controller.viewmodel.PlayerColorVM;
 
-import javax.swing.*;
+import java.util.ArrayList;
+import java.util.List;
 
-public class GameController {
+
+public class GameController implements GameObserver {
     private final Game game;
-    private MainFrame view;
+    private GameView view;
 
     public GameController(Game game) {
         this.game = game;
     }
 
-    public void setView(MainFrame view) {
+    public void setView(GameView view) {
         this.view = view;
-        updateView();
+        game.addObserver(this);
+        if (this.view != null) {
+            this.view.onEvent("INIT");
+            this.view.onEvent("TURN");
+            this.view.refresh();
+        }
+    }
+
+    @Override
+    public void onGameChanged(Game game, String reason) {
+        if (view != null) {
+            view.onEvent(reason);
+            view.refresh();
+        }
     }
 
     public void onRoll() {
         if (game.getLastRoll() != -1) {
-            JOptionPane.showMessageDialog(view, "Você já rolou neste turno. Mova uma peça ou passe se não houver jogada.");
+            if (view != null) view.showMessage("Você já rolou neste turno. Mova uma peça ou passe se não houver jogada.");
             return;
         }
         int val = game.roll();
-        updateView();
         if (val == 0) {
-            JOptionPane.showMessageDialog(view, "Você tirou 0, Sem movimento.");
+            if (view != null) view.showMessage("Você tirou 0. Sem movimento.");
             onPassIfRequired();
         }
     }
@@ -36,21 +60,33 @@ public class GameController {
         if (game.enterNewPiece()) {
             endMovePhase();
         } else {
-            JOptionPane.showMessageDialog(view, "Não é possível inserir nova peça agora.");
+            if (view != null) view.showMessage("Não é possível inserir nova peça agora.");
         }
-        updateView();
     }
 
-    public void onPieceClicked(Piece piece) {
+    public void onCellClicked(int row, int col) {
+        if (game.isGameOver()) return;
+        Board b = game.getBoard();
+        for (Cell cell : b.getTrack()) {
+            if (cell.getRow() == row && cell.getCol() == col) {
+                Piece occ = cell.getOccupant();
+                if (occ != null && occ.getOwner() == game.getCurrent()) {
+                    onPieceClicked(occ);
+                }
+                return;
+            }
+        }
+    }
+
+    private void onPieceClicked(Piece piece) {
         if (game.getLastRoll() <= 0) {
-            JOptionPane.showMessageDialog(view, "Role as moedas antes de mover.");
+            if (view != null) view.showMessage("Role as moedas antes de mover.");
             return;
         }
         if (game.movePiece(piece)) {
             endMovePhase();
-            updateView();
         } else {
-            JOptionPane.showMessageDialog(view, "Movimento inválido para esta peça.");
+            if (view != null) view.showMessage("Movimento inválido para esta peça.");
         }
     }
 
@@ -58,29 +94,104 @@ public class GameController {
         if (game.mustPass()) {
             game.nextTurnIfNeeded();
             checkGameOverOrContinue();
-            updateView();
         } else {
-            JOptionPane.showMessageDialog(view, "Você ainda tem jogadas válidas. Não pode passar.");
+            if (view != null) view.showMessage("Você ainda tem jogadas válidas. Não pode passar.");
         }
     }
 
     private void endMovePhase() {
-        // Após executar a ação (entrar peça ou mover), finaliza turno conforme regras
         game.nextTurnIfNeeded();
         checkGameOverOrContinue();
     }
 
     private void checkGameOverOrContinue() {
         if (game.isGameOver()) {
-            JOptionPane.showMessageDialog(view, game.gameOverMessage());
+            if (view != null) view.showMessage(game.gameOverMessage());
         }
     }
 
-    private void updateView() {
-        if (view != null) view.refresh();
+    // Provedores de estado para a View
+    public int getRows() { return game.getBoard().getRows(); }
+    public int getCols() { return game.getBoard().getCols(); }
+
+    public int getLastRoll() { return game.getLastRoll(); }
+    public boolean canEnterNewPiece() { return game.canEnterNewPiece(); }
+    public boolean isGameOver() { return game.isGameOver(); }
+
+    public String getPlayerName(PlayerColorVM color) {
+        return (color == PlayerColorVM.BLACK ? game.getBlack() : game.getWhite()).getName();
     }
 
-    public Game getGame() {
-        return game;
+    public int getPlayerCoins(PlayerColorVM color) {
+        return (color == PlayerColorVM.BLACK ? game.getBlack() : game.getWhite()).getCoins();
+    }
+
+    public PlayerColorVM getCurrentPlayerColor() {
+        return map(game.getCurrent().getColor());
+    }
+
+    public PlayerColorVM getOpponentPlayerColor() {
+        return map(game.getOpponent().getColor());
+    }
+
+    public long getFinishedCount(PlayerColorVM color) {
+        return (color == PlayerColorVM.BLACK ? game.getBlack() : game.getWhite()).countFinished();
+    }
+
+    public List<CellVM> getCells() {
+        Board b = game.getBoard();
+        List<CellVM> out = new ArrayList<>(b.getTrack().size());
+        for (Cell c : b.getTrack()) {
+            Piece occ = c.getOccupant();
+            boolean occupied = (occ != null);
+            PlayerColorVM occColor = occupied ? map(occ.getOwner().getColor()) : null;
+            Integer occId = occupied ? occ.getId() : null;
+            out.add(new CellVM(c.getRow(), c.getCol(), map(c.getType()), occupied, occColor, occId));
+        }
+        return out;
+    }
+
+    public List<PieceVM> getPieces(PlayerColorVM color) {
+        Player p = (color == PlayerColorVM.BLACK) ? game.getBlack() : game.getWhite();
+        Board b = game.getBoard();
+        List<PieceVM> list = new ArrayList<>();
+        for (Piece pc : p.getPieces()) {
+            boolean onBoard = pc.isOnBoard();
+            boolean finished = pc.isFinished();
+            Integer row = null, col = null;
+            if (onBoard) {
+                Cell cell = b.getTrack().get(pc.getPosition());
+                row = cell.getRow(); col = cell.getCol();
+            }
+            list.add(new PieceVM(pc.getId(), color, onBoard, finished, row, col));
+        }
+        return list;
+    }
+
+    public List<PieceVM> getReservedPieces(PlayerColorVM color) {
+        List<PieceVM> all = getPieces(color);
+        List<PieceVM> out = new ArrayList<>();
+        for (PieceVM vm : all) if (!vm.onBoard && !vm.finished) out.add(vm);
+        return out;
+    }
+
+    public List<PieceVM> getFinishedPieces(PlayerColorVM color) {
+        List<PieceVM> all = getPieces(color);
+        List<PieceVM> out = new ArrayList<>();
+        for (PieceVM vm : all) if (vm.finished) out.add(vm);
+        return out;
+    }
+
+    private PlayerColorVM map(PlayerColor c) {
+        return c == PlayerColor.BLACK ? PlayerColorVM.BLACK : PlayerColorVM.WHITE;
+    }
+
+    private CellTypeVM map(CellType t) {
+        return switch (t) {
+            case NORMAL -> CellTypeVM.NORMAL;
+            case TRIANGLE_PENALTY -> CellTypeVM.TRIANGLE_PENALTY;
+            case ENDPOINT -> CellTypeVM.ENDPOINT;
+            case START -> CellTypeVM.START;
+        };
     }
 }

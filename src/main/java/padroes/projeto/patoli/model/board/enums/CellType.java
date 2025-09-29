@@ -1,4 +1,4 @@
-package padroes.projeto.patoli.model;
+package padroes.projeto.patoli.model.board.enums;
 
 public enum CellType {
     NORMAL,
