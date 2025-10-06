@@ -18,7 +18,6 @@ public class MovementRules {
      * - Permite cruzar a START em movimentos que não estejam finalizando (sem efeito).
      * - Se a distância até a START (no sentido do percurso) for 'dist' > 0:
      *   - steps <  dist  => move normalmente 'steps' casas.
-     *   - steps == dist  => finaliza (Piece.FINISHED), somente se a START estiver livre.
      *   - steps >  dist  => movimento inválido (Integer.MIN_VALUE), NÃO dá a volta novamente.
      */
     public int computeDestination(Board board, Player current, int from, int steps) {
@@ -36,10 +35,6 @@ public class MovementRules {
             if (steps > distToStart) {
                 // Ultrapassaria a START — bloquear o movimento desta peça
                 return Integer.MIN_VALUE;
-            }
-            if (steps == distToStart) {
-                // Finaliza somente se a START estiver livre
-                return board.isFree(startIdx) ? Piece.FINISHED : Integer.MIN_VALUE;
             }
             // steps < distToStart: movimento normal
             return board.advanceIndex(from, steps);
