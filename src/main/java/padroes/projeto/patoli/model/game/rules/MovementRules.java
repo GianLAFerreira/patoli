@@ -6,8 +6,8 @@ import padroes.projeto.patoli.model.board.Player;
 
 /**
  * Regras puras de movimento.
- * Responsável por calcular o destino e a finalização (exatidão + START livre),
- * e bloquear "ultrapassagem" quando a peça está a poucos passos da casa de saída.
+ * Responsável por calcular o destino e a finalização (exatidão),
+ * bloqueando ultrapassagem e permitindo finalizar mesmo com START ocupada.
  */
 public class MovementRules {
 
@@ -15,10 +15,11 @@ public class MovementRules {
      * Calcula o destino de uma peça avançando 'steps' na trilha.
      *
      * Regras:
-     * - Permite cruzar a START em movimentos que não estejam finalizando (sem efeito).
      * - Se a distância até a START (no sentido do percurso) for 'dist' > 0:
      *   - steps <  dist  => move normalmente 'steps' casas.
+     *   - steps == dist  => finaliza (Piece.FINISHED), independentemente da START estar ocupada.
      *   - steps >  dist  => movimento inválido (Integer.MIN_VALUE), NÃO dá a volta novamente.
+     * - Permite cruzar a START quando não estiver finalizando (sem efeito).
      */
     public int computeDestination(Board board, Player current, int from, int steps) {
         if (steps <= 0) return from;
@@ -31,10 +32,13 @@ public class MovementRules {
         if (distToStart < 0) distToStart += n;
 
         if (distToStart > 0) {
-            // Está "a caminho" da START
             if (steps > distToStart) {
                 // Ultrapassaria a START — bloquear o movimento desta peça
                 return Integer.MIN_VALUE;
+            }
+            if (steps == distToStart) {
+                // Finaliza mesmo que a START esteja ocupada (sem captura e sem ocupar a START)
+                return Piece.FINISHED;
             }
             // steps < distToStart: movimento normal
             return board.advanceIndex(from, steps);
