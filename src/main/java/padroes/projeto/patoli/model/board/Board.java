@@ -49,17 +49,43 @@ public class Board {
             }
         }
 
-        // Triângulos: 2 casas antes e 2 depois de cada ponta
-        int n = track.size();
-        for (int ep : endpoints) {
-            int b1 = mod(ep - 1, n);
-            int b2 = mod(ep - 2, n);
-            int a1 = mod(ep + 1, n);
-            int a2 = mod(ep + 2, n);
-            trianglePenalty.addAll(Arrays.asList(b1, b2, a1, a2));
+        // Marcação de casas de punição por COORDENADAS (cobre ida e volta)
+        trianglePenalty.clear();
+        Set<Long> penaltyCoords = new HashSet<>();
+        for (int epIndex : endpoints) {
+            Cell epCell = track.get(epIndex);
+            int r = epCell.getRow();
+            int c = epCell.getCol();
+
+            // Topo
+            if (r == 0) {
+                addPenaltyCoord(penaltyCoords, 1, c);
+                addPenaltyCoord(penaltyCoords, 2, c);
+            }
+            // Base
+            if (r == rows - 1) {
+                addPenaltyCoord(penaltyCoords, rows - 2, c);
+                addPenaltyCoord(penaltyCoords, rows - 3, c);
+            }
+            // Esquerda
+            if (c == 0) {
+                addPenaltyCoord(penaltyCoords, r, 1);
+                addPenaltyCoord(penaltyCoords, r, 2);
+            }
+            // Direita
+            if (c == cols - 1) {
+                addPenaltyCoord(penaltyCoords, r, cols - 2);
+                addPenaltyCoord(penaltyCoords, r, cols - 3);
+            }
         }
-        for (int idx : trianglePenalty) {
-            if (!endpoints.contains(idx)) {
+
+        // Converter coordenadas de punição em índices do track e marcar
+        for (long key : penaltyCoords) {
+            int pr = (int)(key >> 32);
+            int pc = (int)(key & 0xffffffffL);
+            int idx = indexOfCoord(coords, pr, pc);
+            if (idx >= 0 && !endpoints.contains(idx)) {
+                trianglePenalty.add(idx);
                 setCellType(idx, CellTypeEnum.TRIANGLE_PENALTY);
             }
         }
@@ -78,6 +104,14 @@ public class Board {
             startIndex.putIfAbsent(color, 0);
         }
     }
+
+    private void addPenaltyCoord(Set<Long> set, int r, int c) {
+        if (r < 0 || c < 0 || r >= rows || c >= cols) return;
+        long key = (((long) r) << 32) | (c & 0xffffffffL);
+        set.add(key);
+    }
+
+
 
     private void setCellType(int index, CellTypeEnum type) {
         Cell old = track.get(index);

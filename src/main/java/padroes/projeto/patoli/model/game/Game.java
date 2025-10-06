@@ -22,6 +22,10 @@ public class Game implements GameObservable {
     private int lastRoll = -1;
     private boolean extraTurn = false;
 
+    // Pote de moedas: penalidades vão para aqui; vencedor leva o pote no fim
+    private int pot = 0;
+    private boolean potSettled = false;
+
     // Regras extraídas
     private final MovementRules movementRules = new MovementRules();
     private final ScoringRules scoringRules = new ScoringRules();
@@ -60,6 +64,7 @@ public class Game implements GameObservable {
     public Player getCurrent() { return current; }
     public Player getOpponent() { return current == black ? white : black; }
     public int getLastRoll() { return lastRoll; }
+    public int getPot() { return pot; }
 
     public int roll() {
         int val = dice.roll();
@@ -132,6 +137,7 @@ public class Game implements GameObservable {
         if (dest == Piece.FINISHED) {
             board.free(from);
             piece.finish();
+            // Finalização: oponente paga 1 ao jogador atual (mantido)
             getOpponent().addCoins(-1);
             current.addCoins(1);
             notifyObservers("FINISH");
@@ -152,9 +158,11 @@ public class Game implements GameObservable {
     private void applyLandingRules(Piece piece, int index) {
         int penalty = scoringRules.penaltyForLanding(board, index);
         if (penalty != 0) {
+            // Nova regra: penalidade vai para o pote (e não ao oponente)
+            // penalty é -1, então removemos 1 do jogador atual e adicionamos 1 ao pote.
             current.addCoins(penalty);
-            getOpponent().addCoins(-penalty);
-            notifyObservers("PENALTY");
+            pot += -penalty;
+            notifyObservers("PENALTY_POT");
         }
         if (scoringRules.isExtraTurn(board, index)) {
             extraTurn = true;
@@ -187,12 +195,31 @@ public class Game implements GameObservable {
     }
 
     public String gameOverMessage() {
+        // Ao encerrar, o vencedor leva o pote (se ainda não liquidado)
+        if (!potSettled && isGameOver()) {
+            Player winner = determineWinner();
+            if (winner != null && pot > 0) {
+                winner.addCoins(pot);
+                pot = 0;
+            }
+            potSettled = true;
+        }
+
         if (!black.hasCoins() && !white.hasCoins()) return "Ambos sem moedas. Empate raro!";
         if (!black.hasCoins()) return winnerMsg(white, "oponente ficou sem moedas");
         if (!white.hasCoins()) return winnerMsg(black, "oponente ficou sem moedas");
         if (black.allFinished()) return winnerMsg(black, "moveu todas as peças para fora");
         if (white.allFinished()) return winnerMsg(white, "moveu todas as peças para fora");
         return "";
+    }
+
+    private Player determineWinner() {
+        if (!black.hasCoins() && !white.hasCoins()) return null;
+        if (!black.hasCoins()) return white;
+        if (!white.hasCoins()) return black;
+        if (black.allFinished()) return black;
+        if (white.allFinished()) return white;
+        return null;
     }
 
     private String winnerMsg(Player p, String cause) {

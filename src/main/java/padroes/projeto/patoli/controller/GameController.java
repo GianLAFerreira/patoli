@@ -113,6 +113,7 @@ public class GameController implements GameObserver {
     // Provedores de estado para a View
     public int getRows() { return game.getBoard().getRows(); }
     public int getCols() { return game.getBoard().getCols(); }
+    public int getPot() { return game.getPot(); }
 
     public int getLastRoll() { return game.getLastRoll(); }
     public boolean canEnterNewPiece() { return game.canEnterNewPiece(); }
@@ -194,4 +195,5 @@ public class GameController implements GameObserver {
             case START -> CellTypeVMEnum.START;
         };
     }
+
 }
