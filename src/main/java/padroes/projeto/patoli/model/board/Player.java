@@ -8,13 +8,13 @@ import java.util.List;
 public class Player {
     private final String name;
     private final PlayerColorEnum color;
-    private int coins = 20;
+    private int coins = 10;
     private final List<Piece> pieces = new ArrayList<>();
 
     public Player(String name, PlayerColorEnum color) {
         this.name = name;
         this.color = color;
-        for (int i = 0; i < 6; i++) {
+        for (int i = 0; i < 3; i++) {
             pieces.add(new Piece(i, this));
         }
     }
